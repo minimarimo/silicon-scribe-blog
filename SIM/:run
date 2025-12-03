@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# ============================
+# Directory Set
+# ============================
+
+RTL="../RTL"
+TB="../TB"
+SCRIPT="../SCRIPT"
+
+# ============================
+# Argument Check
+# ============================
+if [ "$#" -ne 1 ]; then
+    echo "[System] Usage: $0 <module_name>"
+    exit 1
+fi
+
+DESIGN_FILE="$1.v"
+TB_FILE="tb_$1.v"
+
+# ============================
+# Run Test
+# ============================
+
+"${SCRIPT}/judge_core.sh" "${RTL}/${DESIGN_FILE}" "${TB}/${TB_FILE}"
+
+exit 0

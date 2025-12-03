@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# ==============================================================================
+# Script Name: judge_core.sh
+# Description: Verilog 코드와 Testbench를 컴파일하고 시뮬레이션하여 무결성을 검증함.
+# Usage: ./judge_core.sh <design_file.v> <testbench_file.v>
+# Return: 0 (PASS), 1 (COMPILE ERROR), 2 (SIMULATION FAIL)
+# ==============================================================================
+
+# 1. 인자 확인
+if [ "$#" -ne 2 ]; then
+    echo "[System] Usage: $0 <design_file.v> <testbench_file.v>"
+    exit 1
+fi
+
+DESIGN_FILE=$1
+TB_FILE=$2
+OUTPUT_BIN="sim_output.vvp"
+LOG_FILE="sim_log.txt"
+
+# 2. Icarus Verilog 설치 확인
+if ! command -v iverilog &> /dev/null; then
+    echo "[System] Error: iverilog could not be found. Please install it (sudo apt install iverilog)."
+    exit 1
+fi
+
+echo "========================================="
+echo "[System] Starting Verification Process..."
+echo "[Input] Design: $DESIGN_FILE"
+echo "[Input] Testbench: $TB_FILE"
+
+# 3. 컴파일 (Compilation)
+# -o: 출력 파일 이름
+echo "[Step 1] Compiling..."
+iverilog -o $OUTPUT_BIN $DESIGN_FILE $TB_FILE 2> compile_error.log
+
+if [ $? -ne 0 ]; then
+    echo "[Result] ❌ Compilation FAILED."
+    cat compile_error.log
+    rm -f compile_error.log
+    exit 1 # Return Code 1: Compile Error
+fi
+
+echo "[Result] ✅ Compilation SUCCESS."
+
+# 4. 시뮬레이션 (Simulation)
+echo "[Step 2] Running Simulation..."
+vvp $OUTPUT_BIN > $LOG_FILE
+
+# 5. 결과 판정 (Judgment)
+# Testbench 내부에 $display("TEST PASSED") 혹은 "TEST FAILED"가 있다고 가정.
+# 사용자의 노하우: Testbench 작성 시 특정 키워드를 출력하게 프롬프팅 해야 함.
+
+if grep -q "TEST PASSED" $LOG_FILE; then
+    echo "[Result] 🎉 Verification PASSED!"
+    echo "========================================="
+    # 정리
+    rm -f $OUTPUT_BIN compile_error.log
+    exit 0
+else
+    echo "[Result] ❌ Verification FAILED (Runtime Error or Logic Error)."
+    echo "--- Simulation Log ---"
+    cat $LOG_FILE
+    echo "----------------------"
+    # 정리
+    rm -f $OUTPUT_BIN compile_error.log
+    exit 2 # Return Code 2: Simulation Failed
+fi

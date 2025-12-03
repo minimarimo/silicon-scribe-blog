@@ -1,0 +1,2 @@
+TEST PASSED
+/home/scien/00_project/00_PSS/TB/tb_logic_74ls86_quad_xor.v:111: $finish called at 22 (1s)
