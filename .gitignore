@@ -3,4 +3,4 @@ __pycache__/
 *.vvp
 *.vcd
 *.log
-ETC/api-key.yml
+ETC/*
